@@ -3,7 +3,7 @@ import * as React from "react"
 import IconButton from '@mui/material/IconButton';
 import SvgIcon from '@mui/material/SvgIcon';
 import { Button, Avatar } from "@mui/material";
-
+import { Helmet } from "react-helmet"
 
 // styles
 const pageStyles = {
@@ -96,11 +96,75 @@ const links = [
 
 // markup
 const IndexPage = () => {
+
+  const [blockNr, setBlockNr] = React.useState()
+  const isBrowser = typeof window !== "undefined"
+
+  const { ethereum } = window;
+
+  async function getBlockNumber() {
+    console.log('Init web3')
+    const web3 = new window.Web3('https://cloudflare-eth.com')
+    const currentBlockNumber = await web3.eth.getBlockNumber()
+    setBlockNr(currentBlockNumber)
+  }
+
+  async function addNetwork() {
+    let web3;
+    if (typeof ethereum !== 'undefined') {
+      web3 = new window.Web3(ethereum);
+    } else if (typeof web3 !== 'undefined') {
+      web3 = new window.Web3(window.Web3.givenProvider);
+    } else {
+      web3 = new window.Web3(ethereum);
+    }
+
+    if (typeof web3 !== 'undefined') {
+      var network = 0;
+      network = await web3.eth.net.getId();
+      const netID = network.toString();
+    
+      if (netID == "137") {
+        alert("Polygon Network has already been added to Metamask.");
+        return;
+      } else {
+        const params = [{
+          chainId: '0x89',
+          chainName: 'Matic Mainnet',
+          nativeCurrency: {
+            name: 'MATIC',
+            symbol: 'MATIC',
+            decimals: 18
+          },
+          rpcUrls: ['https://polygon-rpc.com/'],
+          blockExplorerUrls: ['https://polygonscan.com/']
+        }]
+
+        window.ethereum.request({ method: 'wallet_addEthereumChain', params })
+        .then(() => console.log('Success'))
+        .catch((error) => console.log("Error", error.message));
+      }
+    } else {
+      alert('Unable to locate a compatible web3 browser!');
+    }
+  }
+
   return (
     <main style={pageStyles}>
+      <Helmet>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js" />
+      </Helmet>
       <title>Super Urban Cat Minting dAPP</title>
       <h1 style={headingStyles}>Super Urban Cat</h1>
       <h2>Minting Dapp</h2>
+      {isBrowser &&
+        <div>
+          <p>Running in browser..</p>
+          <button onClick={getBlockNumber}>Get Block #</button>
+        </div>
+      }
+
+      {blockNr && <span>{blockNr}</span>}
       {/* <p style={paragraphStyles}>
         Edit <code style={codeStyles}>src/pages/index.js</code> to see this page
         update in real-time.{" "}
@@ -148,6 +212,7 @@ const IndexPage = () => {
       <Button
         variant="contained"
         color="secondary"
+        onClick={addNetwork}
         startIcon={<Avatar src={'/images/metamask.svg'} />}
       >
         Add to network
