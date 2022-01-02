@@ -17,8 +17,10 @@
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
+    "@metamask/detect-provider": "^1.2.0",
     "@mui/material": "^5.2.6",
     "gatsby": "^4.4.0",
+    "gatsby-plugin-google-fonts": "^1.0.1",
     "gatsby-plugin-manifest": "^4.4.0",
     "gatsby-plugin-react-helmet": "^5.4.0",
     "gatsby-plugin-sitemap": "^5.4.0",

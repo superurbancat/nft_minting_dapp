@@ -12,5 +12,14 @@ module.exports = {
         icon: "src/images/icon.png",
       },
     },
+    {
+      resolve: `gatsby-plugin-google-fonts`,
+      options: {
+        fonts: [
+          `Press+Start+2`,         
+        ],
+        display: 'swap'
+      }
+    }
   ],
 };
