@@ -2,8 +2,10 @@ import * as React from "react"
 
 import IconButton from '@mui/material/IconButton';
 import SvgIcon from '@mui/material/SvgIcon';
-import { Button, Avatar } from "@mui/material";
+import { Button, Avatar, Container } from "@mui/material";
 import { Helmet } from "react-helmet"
+import MetaMaskButton from '../components/MetaMaskButton'
+
 
 // styles
 const pageStyles = {
@@ -22,6 +24,13 @@ const headingAccentStyles = {
 const paragraphStyles = {
   marginBottom: 48,
 }
+
+const supplyTextStyles = {
+  fontSize: 50,
+  textAlign: 'center',
+  fontWeight: 'bold'
+}
+
 const codeStyles = {
   color: "#8A6534",
   padding: 4,
@@ -94,131 +103,93 @@ const links = [
   },
 ]
 
-// markup
-const IndexPage = () => {
 
-  const [blockNr, setBlockNr] = React.useState()
-  const isBrowser = typeof window !== "undefined"
-
-  const { ethereum } = window;
-
-  async function getBlockNumber() {
-    console.log('Init web3')
-    const web3 = new window.Web3('https://cloudflare-eth.com')
-    const currentBlockNumber = await web3.eth.getBlockNumber()
-    setBlockNr(currentBlockNumber)
+class Index extends React.Component {
+  constructor(props) {
+    super(props);
+    // this.isBrowser = typeof window !== "undefined";
+    // this.ethereum = window;
+    this.state = {
+      totalSupply:1
+    };
   }
+  
+  
 
-  async function addNetwork() {
-    let web3;
-    if (typeof ethereum !== 'undefined') {
-      web3 = new window.Web3(ethereum);
-    } else if (typeof web3 !== 'undefined') {
-      web3 = new window.Web3(window.Web3.givenProvider);
-    } else {
-      web3 = new window.Web3(ethereum);
-    }
-
-    if (typeof web3 !== 'undefined') {
-      var network = 0;
-      network = await web3.eth.net.getId();
-      const netID = network.toString();
-    
-      if (netID == "137") {
-        alert("Polygon Network has already been added to Metamask.");
-        return;
-      } else {
-        const params = [{
-          chainId: '0x89',
-          chainName: 'Matic Mainnet',
-          nativeCurrency: {
-            name: 'MATIC',
-            symbol: 'MATIC',
-            decimals: 18
-          },
-          rpcUrls: ['https://polygon-rpc.com/'],
-          blockExplorerUrls: ['https://polygonscan.com/']
-        }]
-
-        window.ethereum.request({ method: 'wallet_addEthereumChain', params })
-        .then(() => console.log('Success'))
-        .catch((error) => console.log("Error", error.message));
-      }
-    } else {
-      alert('Unable to locate a compatible web3 browser!');
-    }
-  }
-
-  return (
-    <main style={pageStyles}>
-      <Helmet>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js" />
-      </Helmet>
-      <title>Super Urban Cat Minting dAPP</title>
-      <h1 style={headingStyles}>Super Urban Cat</h1>
-      <h2>Minting Dapp</h2>
-      {isBrowser &&
-        <div>
-          <p>Running in browser..</p>
-          <button onClick={getBlockNumber}>Get Block #</button>
-        </div>
-      }
-
-      {blockNr && <span>{blockNr}</span>}
-      {/* <p style={paragraphStyles}>
-        Edit <code style={codeStyles}>src/pages/index.js</code> to see this page
-        update in real-time.{" "}
-        <span role="img" aria-label="Sunglasses smiley emoji">
-          😎
-        </span>
-      </p> */}
-      {/* <ul style={listStyles}>
-        <li style={docLinkStyle}>
-          <a
-            style={linkStyle}
-            href={`${docLink.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-          >
-            {docLink.text}
-          </a>
-        </li>
-        {links.map(link => (
-          <li key={link.url} style={{ ...listItemStyles, color: link.color }}>
-            <span>
-              <a
-                style={linkStyle}
-                href={`${link.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-              >
-                {link.text}
-              </a>
-              {link.badge && (
-                <span style={badgeStyle} aria-label="New Badge">
-                  NEW!
-                </span>
-              )}
-              <p style={descriptionStyle}>{link.description}</p>
-            </span>
+  render() {
+    return (
+      <main style={pageStyles}>
+        <title>Super Urban Cat Minting dAPP</title>
+        <h1 style={headingStyles}>Super Urban Cat</h1>
+        <h2>Minting Dapp</h2>
+        <Container maxWidth="sm" sx={{ p: 2, border: '1px dashed grey' }}>
+          <p style={supplyTextStyles}>{this.state.totalSupply}/1</p>
+          <Button>Mint</Button>
+        </Container>
+        
+        {/* {isBrowser &&
+          <div>
+            <p>Running in browser..</p>
+            <button onClick={getBlockNumber}>Get Block #</button>
+          </div>
+        }
+  
+        {blockNr && <span>{blockNr}</span>} */}
+        {/* <p style={paragraphStyles}>
+          Edit <code style={codeStyles}>src/pages/index.js</code> to see this page
+          update in real-time.{" "}
+          <span role="img" aria-label="Sunglasses smiley emoji">
+            😎
+          </span>
+        </p> */}
+        {/* <ul style={listStyles}>
+          <li style={docLinkStyle}>
+            <a
+              style={linkStyle}
+              href={`${docLink.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
+            >
+              {docLink.text}
+            </a>
           </li>
-        ))}
-      </ul> */}
-      <p style={paragraphStyles}>
-        Please make sure you are connected to Polygon Mainnet and the correct address. Please note: Once you make the purchase, you cannot undo this action.
-      </p>
-      {/* <button type="button" class="btn btn-xss btn-soft-light text-nowrap d-flex align-items-center mr-2" onclick="addNetwork('web3');"> */}
-      {/* <img width="15" src={MetaMaskImg} alt="Metamask"/> Add Polygon Network */}
-      {/* </button> */}
-      {/* <Button variant="contained" color="primary" startIcon={<DeleteIcon />}>
-      Hello World
-    </Button> */}
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={addNetwork}
-        startIcon={<Avatar src={'/images/metamask.svg'} />}
-      >
-        Add to network
-      </Button>
-    </main>
-  )
-}
-
-export default IndexPage
+          {links.map(link => (
+            <li key={link.url} style={{ ...listItemStyles, color: link.color }}>
+              <span>
+                <a
+                  style={linkStyle}
+                  href={`${link.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
+                >
+                  {link.text}
+                </a>
+                {link.badge && (
+                  <span style={badgeStyle} aria-label="New Badge">
+                    NEW!
+                  </span>
+                )}
+                <p style={descriptionStyle}>{link.description}</p>
+              </span>
+            </li>
+          ))}
+        </ul> */}
+        <p style={paragraphStyles}>
+          Please make sure you are connected to Polygon Mainnet and the correct address. Please note: Once you make the purchase, you cannot undo this action.
+        </p>
+        {/* <button type="button" class="btn btn-xss btn-soft-light text-nowrap d-flex align-items-center mr-2" onclick="addNetwork('web3');"> */}
+        {/* <img width="15" src={MetaMaskImg} alt="Metamask"/> Add Polygon Network */}
+        {/* </button> */}
+        {/* <Button variant="contained" color="primary" startIcon={<DeleteIcon />}>
+        Hello World
+      </Button> */}
+        {/* <Button
+          variant="contained"
+          color="secondary"
+          onClick={this.addNetwork}
+          startIcon={<Avatar src={'/images/metamask.svg'} />}
+        >
+          Add Polygon Network
+        </Button> */}
+        <MetaMaskButton/>
+      </main>
+    )
+  }
+};
+export default Index
