@@ -167,7 +167,7 @@ class Index extends React.Component {
         <Container maxWidth="sm" sx={{textAlign:"left", marginBottom: 5}}>
           <Paper>Wallet Address: {this.state.currentAccount}</Paper>
           <Paper>Contract Address: {Constants.CONTRACT_ADDRESS}</Paper>
-          <Paper> Tomorrow</Paper>
+          <Paper>Tomorrow</Paper>
           <Chip icon={<Avatar src="/images/metamask.svg" sx={{ width: 20, height: 20 }}/>} label={"Wallet: " + this.state.currentAccount} color={this.state.provider.connected ? "success" : "default"}/>&nbsp;          
           
           <Chip label="Chip Filled" />&nbsp;
