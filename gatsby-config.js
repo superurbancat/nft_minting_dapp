@@ -1,25 +1,16 @@
 module.exports = {
   siteMetadata: {
-    siteUrl: "https://www.yourdomain.tld",
+    siteUrl: "https://www.superurbancat.com",
     title: "nft_minting_dapp",
   },
   plugins: [
     "gatsby-plugin-react-helmet",
-    "gatsby-plugin-sitemap",
+    "gatsby-plugin-sitemap",    
     {
       resolve: "gatsby-plugin-manifest",
       options: {
         icon: "src/images/icon.png",
       },
     },
-    {
-      resolve: `gatsby-plugin-google-fonts`,
-      options: {
-        fonts: [
-          `Press+Start+2`,         
-        ],
-        display: 'swap'
-      }
-    }
   ],
 };

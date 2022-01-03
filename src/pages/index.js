@@ -1,9 +1,13 @@
 import * as React from "react"
 
 import detectEthereumProvider from '@metamask/detect-provider'
-import { Button, Container, Avatar } from "@mui/material";
+import { Button, Container, Chip, Avatar, Paper } from "@mui/material";
 import { Helmet } from "react-helmet"
 import * as Constants from '../constants'
+import { GrassOutlined, AccountBalanceWalletOutlined, Check } from '@mui/icons-material'
+import LoadableWeb3EthContract from '../components/LoadableWeb3EthContract'
+
+import Web3EthContract from "web3-eth-contract";
 
 class Index extends React.Component {
   constructor(props) {
@@ -15,14 +19,15 @@ class Index extends React.Component {
         chainId: 1, // 1:ETH Mainnet,
         connected: false,
       },
-      currentAccount: {},
+      currentAccount: "",
+      contract: null,
+      contractLoaded: false,
     };
 
     this.handleAccountsChanged = this.handleAccountsChanged.bind(this);
     this.connectToWallet = this.connectToWallet.bind(this);
+    this.mint = this.mint.bind(this);
   }
-
-
 
   async componentDidMount() {
     const provider = await this.ethereumProvider();
@@ -60,7 +65,6 @@ class Index extends React.Component {
   }
 
   handleChainChanged(_chainId) {
-
     window.location.reload();
   }
 
@@ -70,12 +74,15 @@ class Index extends React.Component {
       // MetaMask is locked or the user has not connected any accounts
       console.log('Please connect to MetaMask.');
     } else if (accounts[0] !== this.state.currentAccount) {
+      
       console.log("Accounts", accounts[0]);
       this.setState({ provider: { ...this.state.provider, connected: true } })
-      this.state.currentAccount = accounts[0];
+      const account = accounts[0];
+      this.state.currentAccount = account;
+      
+      const ethereum = await this.ethereumProvider();
 
-      if (this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) {
-        const ethereum = await this.ethereumProvider();
+      if (this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) {        
         try {
           await ethereum.request({ method: Constants.WALLET_SWITCH_ETHEREUM_CHAIN, params: [{ chainId: Constants.POLYGON_CHAIN_ID }] });
         } catch (switchError) {
@@ -85,28 +92,68 @@ class Index extends React.Component {
               params: Constants.POLYGON_CHAIN_PARAM,
             });
           } catch (addError) {
-            alert(addError);
+            console.log(addError);
           }
         }
+      } else { 
+        // On Right Chain, Load Smart Contracts
+        this.loadContract(ethereum);
       }
     }
   }
 
+  async loadContract(provider) {
+    if (provider) {
+      const abiResponse = await fetch("/config/abi.json", {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      const abi = await abiResponse.json();
+
+      console.log("ABI", abi);
+
+      Web3EthContract.setProvider(provider);
+
+      const chainId = this.state.provider.chainId;
+
+      if(chainId === Constants.POLYGON_CHAIN_ID) {
+        const contract = new Web3EthContract(
+          abi,
+          Constants.CONTRACT_ADDRESS
+        );
+
+        this.setState({contract: contract});
+        this.setState({contractLoaded : true})
+      }
+    }
+  }
 
   async connectToWallet() {
-    const ethereum = this.ethereumProvider();
-    ethereum
-      .request({ method: 'eth_requestAccounts' })
-      .then(this.handleAccountsChanged)
-      .catch((err) => {
-        if (err.code === 4001) {
-          // EIP-1193 userRejectedRequest error
-          // If this happens, the user rejected the connection request.
-          console.log('Please connect to MetaMask.');
-        } else {
-          console.error(err);
-        }
-      });
+    const ethereum = await this.ethereumProvider();
+    if (ethereum) {
+      ethereum
+        .request({ method: 'eth_requestAccounts' })
+        .then(this.handleAccountsChanged)
+        .catch((err) => {
+          if (err.code === 4001) {
+            // EIP-1193 userRejectedRequest error
+            // If this happens, the user rejected the connection request.
+            console.log('Please connect to MetaMask.');
+          } else {
+            console.error(err);
+          }
+        });
+    }
+  }
+
+  async mint() {
+    console.log("Contract", this.state.contract);
+    if(this.state.contract) {
+
+    }
+    
   }
 
   render() {
@@ -117,36 +164,54 @@ class Index extends React.Component {
         <h2>Minting Dapp</h2>
 
         <h2></h2>
+        <Container maxWidth="sm" sx={{textAlign:"left", marginBottom: 5}}>
+          <Paper>Wallet Address: {this.state.currentAccount}</Paper>
+          <Paper>Contract Address: {Constants.CONTRACT_ADDRESS}</Paper>
+          <Paper> Tomorrow</Paper>
+          <Chip icon={<Avatar src="/images/metamask.svg" sx={{ width: 20, height: 20 }}/>} label={"Wallet: " + this.state.currentAccount} color={this.state.provider.connected ? "success" : "default"}/>&nbsp;          
+          
+          <Chip label="Chip Filled" />&nbsp;
+        </Container>
+
         <Container maxWidth="sm" sx={{ p: 2, border: '1px dashed grey' }}>
           <p style={supplyTextStyles}>{this.state.totalSupply}/1</p>
-
-          {!this.state.provider.installed &&
+          <p> {this.state.contractLoaded}</p>
+          { // Before metamask installed
+            !this.state.provider.installed &&
             <p>Please Install MetaMask. <a href="https://metamask.io/download" target="_blank">https://metamask.io/download</a></p>
           }
 
-          {this.state.provider.installed && !this.state.provider.connected &&
+          { // Need add or switch network to polygon mainnet
+            (this.state.provider.installed && this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) &&
+            <p>
+              Switching Network to Polygon Mainnet
+            </p>
+          }
+
+          { // Connect to wallet
+            this.state.provider.installed && !this.state.provider.connected &&
             <Button
+              size="large"
               variant="contained"
               color="secondary"
               onClick={this.connectToWallet}
+              startIcon={<AccountBalanceWalletOutlined />}
             >
               Connect
             </Button>
           }
 
-          {(this.state.provider.installed && this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) &&
+          { // Time to mint
+            this.state.provider.installed && this.state.provider.connected && this.state.provider.chainId === Constants.POLYGON_CHAIN_ID &&
             <Button
+              style={buttonStyles}
               variant="contained"
               color="secondary"
-              onClick={this.addNetwork}
-              startIcon={<Avatar src={'/images/metamask.svg'} />}
-            >
-              Swith To Polygon Network
-            </Button>}
-
-          {this.state.provider.installed && this.state.provider.connected && this.state.provider.chainId === Constants.POLYGON_CHAIN_ID &&
-            <Button variant="contained"
-              color="secondary">Mint</Button>
+              size="large"
+              onClick={this.mint}
+              startIcon={<GrassOutlined />}>
+              Mint
+            </Button>
           }
 
         </Container>
@@ -195,7 +260,10 @@ class Index extends React.Component {
           ))}
         </ul> */}
         <p style={paragraphStyles}>
-          Please make sure you are connected to Polygon Mainnet and the correct address. Please note: Once you make the purchase, you cannot undo this action.
+          Please make sure you are connected to Polygon Mainnet and the correct address.
+        </p>
+        <p style={paragraphStyles}>
+          Please note: Once you make the purchase, you cannot undo this action.
         </p>
         {/* <button type="button" class="btn btn-xss btn-soft-light text-nowrap d-flex align-items-center mr-2" onclick="addNetwork('web3');"> */}
         {/* <img width="15" src={MetaMaskImg} alt="Metamask"/> Add Polygon Network */}
@@ -224,18 +292,21 @@ const pageStyles = {
   color: "#232129",
   padding: 96,
   // fontFamily: "-apple-system, Press Start 2P, sans-serif, serif",
-  fontFamily: "'Press Start 2P', cursive",
+  // fontFamily: "'Press Start 2P', cursive",
+  // fontFamily: "-apple-system, Acme, sans-serif",
+  // fontFamily: "-apple-system, Concert One, cursive",
   textAlign: 'center'
 }
 const headingStyles = {
   marginTop: 0,
   // maxWidth: 320,
 }
-const headingAccentStyles = {
-  color: "#663399",
+
+const buttonStyles = {
+  fontFamily: "-apple-system, Acme, sans-serif",
 }
 const paragraphStyles = {
-  marginBottom: 48,
+  // marginBottom: 48,
 }
 
 const supplyTextStyles = {
