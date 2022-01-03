@@ -5,6 +5,7 @@ exports.onCreateWebpackConfig = ({ actions }) => {
         plugins: [
             new webpack.ProvidePlugin({
                 Buffer: [require.resolve("buffer/"), "Buffer"],
+                process: 'process/browser'
             }),
         ],
         resolve: {
