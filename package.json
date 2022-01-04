@@ -22,6 +22,7 @@
     "@metamask/detect-provider": "^1.2.0",
     "@mui/icons-material": "^5.2.5",
     "@mui/material": "^5.2.6",
+    "base-64": "^1.0.0",
     "buffer": "^6.0.3",
     "gatsby": "^4.4.0",
     "gatsby-plugin-manifest": "^4.4.0",

@@ -72,7 +72,9 @@ class Index extends React.Component {
 
   handleChainChanged(_chainId) {
     console.log("Chain changed. Reloading window")
-    window.location.reload();
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   }
 
   async handleAccountsChanged(accounts) {
@@ -80,7 +82,7 @@ class Index extends React.Component {
     if (accounts.length === 0) {
       // MetaMask is locked or the user has not connected any accounts      
       this.openSnackbar('Please connect to MetaMask.')
-    } else if (accounts[0] !== this.state.currentAccount) {      
+    } else if (accounts[0] !== this.state.currentAccount) {
       this.setState({ provider: { ...this.state.provider, connected: true } })
       const account = accounts[0];
       this.state.currentAccount = account;
@@ -202,24 +204,24 @@ class Index extends React.Component {
     console.log("Total Gas Limit:", totalGasLimit);
 
     this.openSnackbar("Start Minting...");
-    this.setState({minting: true})
-    
+    this.setState({ minting: true })
+
     try {
-    const receipt = await contract.methods
-      .mint(mintAmount)
-      .send({
-        gasLimit: String(totalGasLimit),
-        to: Constants.CONTRACT_ADDRESS,
-        from: account,
-        value: totalCostWei,
-      });
+      const receipt = await contract.methods
+        .mint(mintAmount)
+        .send({
+          gasLimit: String(totalGasLimit),
+          to: Constants.CONTRACT_ADDRESS,
+          from: account,
+          value: totalCostWei,
+        });
       console.log(receipt);
       this.openSnackbar(`${Constants.NFT_NAME} is yours! go visit Opensea.io to view it.`)
-    } catch(err) {
+    } catch (err) {
       this.openSnackbar(err.message)
       console.log(err)
     } finally {
-      this.setState({minting: false})      
+      this.setState({ minting: false })
     }
   }
 
@@ -241,7 +243,7 @@ class Index extends React.Component {
     this.setState({ snackbarMessage: "" })
   }
 
-  truncate(input, len){
+  truncate(input, len) {
     return input.length > len ? `${input.substring(0, len)}...` : input;
   }
 
@@ -249,14 +251,14 @@ class Index extends React.Component {
     return (
       <main style={pageStyles}>
         <title>Super Urban Cat Minting dApp</title>
-        <h1 style={headingStyles}>Super Urban Cat Minting dApp</h1>              
+        <h1>Super Urban Cat Minting dApp</h1>
         <Container maxWidth="sm" sx={mintContainer}>
-          
+
           {this.state.contract && <p style={highlightTextStyles}>{this.state.totalSupply} / {this.state.maxSupply}</p>}
-          <img src="/images/sucrolling.gif" alt="Super Urban Cat Rolling Images"/>
+          <img src="/images/sucrolling.gif" alt="Super Urban Cat Rolling Images" />
           <p style={highlightTextStyles}>1 {Constants.CONTRACT_SYMBOL} costs 0.5 {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}.<br /></p>
           <div style={noteStyles}>Excluding gas fees.</div>
-         
+
           <p>{this.state.contractLoaded}</p>
           { // Before metamask installed
             !this.state.provider.installed &&
@@ -307,14 +309,14 @@ class Index extends React.Component {
                 Buy {this.state.mintAmount} NFT{this.state.mintAmount > 0 ? "s" : ""}
               </Button>
               <div style={{ marginTop: 5 }}>
-                <span style={{color: (Math.ceil(this.state.balance * 10) / 10) > (this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST) ? 'var(--primary-text)': 'red'}}>{this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST}</span> / {Math.ceil(this.state.balance * 10) / 10} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}
+                <span style={{ color: (Math.ceil(this.state.balance * 10) / 10) > (this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST) ? 'var(--primary-text)' : 'red' }}>{this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST}</span> / {Math.ceil(this.state.balance * 10) / 10} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}
               </div>
             </div>
           }
-          <div style={codeStyles}>Opensea: <a href={Constants.MARKETPLACE_LINK} target="_blank" rel="noreferrer">{Constants.MARKETPLACE_LINK}</a></div>        
-          <div style={codeStyles}>Contract: <a style={linkStyle} href={Constants.POLYGON_SCAN + "/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{this.truncate(Constants.CONTRACT_ADDRESS,15)}</a></div>          
+          <div style={codeStyles}>Opensea: <a href={Constants.MARKETPLACE_LINK} target="_blank" rel="noreferrer">{Constants.MARKETPLACE_LINK}</a></div>
+          <div style={codeStyles}>Contract: <a style={linkStyle} href={Constants.POLYGON_SCAN + "/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{this.truncate(Constants.CONTRACT_ADDRESS, 15)}</a></div>
 
-          <p style={{...noteStyles, textAlign:'left'}}>Please make sure that the website address is "superurbancat.com", and then connect your wallet.</p>
+          <p style={{ ...noteStyles, textAlign: 'left' }}>Please make sure that the website address is "superurbancat.com", and then connect your wallet.</p>
         </Container>
 
         <p style={noteStyles}>
@@ -344,7 +346,7 @@ export default Index
 
 // styles
 const pageStyles = {
-  textAlign: 'center',  
+  textAlign: 'center',
 }
 
 const mintContainer = {
@@ -353,16 +355,14 @@ const mintContainer = {
   border: '2px dashed grey',
   borderRadius: 10,
 }
-const headingStyles = {
-}
 
 const buttonStyles = {
   fontFamily: "Mukta"
 }
 const noteStyles = {
   marginBottom: 10,
-  color:'grey',
-  fontSize:'0.8em',
+  color: 'grey',
+  fontSize: '0.8em',
   // textAlign:'left'
 }
 
