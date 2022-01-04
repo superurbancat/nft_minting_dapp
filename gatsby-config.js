@@ -1,7 +1,7 @@
 module.exports = {
   siteMetadata: {
     siteUrl: "https://www.superurbancat.com",
-    title: "nft_minting_dapp",
+    title: "Super Urban Cat NFT Minting dApp",
   },
   plugins: [
     "gatsby-plugin-react-helmet",
