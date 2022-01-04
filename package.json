@@ -25,6 +25,7 @@
     "base-64": "^1.0.0",
     "buffer": "^6.0.3",
     "gatsby": "^4.4.0",
+    "gatsby-plugin-google-analytics": "^4.4.0",
     "gatsby-plugin-manifest": "^4.4.0",
     "gatsby-plugin-react-helmet": "^5.4.0",
     "gatsby-plugin-sitemap": "^5.4.0",
