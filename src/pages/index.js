@@ -1,5 +1,5 @@
 import * as React from "react"
-
+import Helmet from "react-helmet";
 import detectEthereumProvider from '@metamask/detect-provider'
 import { Button, Container, Slider, CircularProgress } from "@mui/material";
 import * as Constants from '../constants'
@@ -59,15 +59,19 @@ class Index extends React.Component {
     console.log("Decentralized app starting...")
     const chainId = await provider.request({ method: Constants.ETH_METHOD_CHAINID });
     this.setState({ provider: { ...this.state.provider, chainId: chainId } });
-    this.currentEthAccount(provider);
+    this.ethRequestAccounts(provider);
   }
 
-  currentEthAccount(provider) {
+  ethRequestAccounts(provider) {
     provider
-      .request({ method: Constants.ETH_METHOD_ACCOUNTS })
+      .request({ method: Constants.ETH_METHOD_REQUEST_ACCOUNTS })
       .then(this.handleAccountsChanged)
       .catch((err) => {
-        console.error(err);
+        if (err.code === 4001) {
+          console.log('Please connect to MetaMask.');
+        } else {
+          console.error(err);
+        }
       });
   }
 
@@ -180,18 +184,7 @@ class Index extends React.Component {
     const ethereum = await this.ethereumProvider();
     if (ethereum) {
       this.openSnackbar("Connecting to your wallet...");
-      ethereum
-        .request({ method: Constants.ETH_METHOD_REQUEST_ACCOUNTS })
-        .then(this.handleAccountsChanged)
-        .catch((err) => {
-          if (err.code === 4001) {
-            // EIP-1193 userRejectedRequest error
-            // If this happens, the user rejected the connection request.
-            console.log('Please connect to MetaMask.');
-          } else {
-            console.error(err);
-          }
-        });
+      this.ethRequestAccounts(ethereum);
     }
   }
 
@@ -221,11 +214,11 @@ class Index extends React.Component {
           from: account,
           value: totalCostWei,
         });
-        
+
       console.log(receipt);
-      this.openSnackbar(`${Constants.NFT_NAME} is yours! go visit Opensea.io to view it.`)      
+      this.openSnackbar(`${Constants.NFT_NAME} is yours! go visit Opensea.io to view it.`)
       this.loadBalance();
-      this.loadTotalSupply();      
+      this.loadTotalSupply();
     } catch (err) {
       this.openSnackbar(err.message)
       console.log(err)
@@ -259,7 +252,25 @@ class Index extends React.Component {
   render() {
     return (
       <main style={pageStyles}>
-        <title>Super Urban Cat Minting dApp</title>
+        <Helmet>
+          <meta charSet="utf-8" />
+          <title>Super Urban Cat NFT Minting dApp</title>
+          <script type="application/ld+json">
+            {`
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "url": "https://www.spookytech.com",
+                "name": "Spooky technologies",
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "telephone": "+5-601-785-8543",
+                  "contactType": "Customer Support"
+                }
+              }
+            `}
+          </script>
+        </Helmet>
         <h1>Super Urban Cat Minting dApp</h1>
         <Container maxWidth="sm" sx={mintContainer}>
 
@@ -276,7 +287,7 @@ class Index extends React.Component {
 
           { // Need add or switch network to polygon mainnet
             (this.state.provider.installed && this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) &&
-            <p>              
+            <p>
               <Button
                 size="large"
                 variant="contained"
@@ -323,9 +334,9 @@ class Index extends React.Component {
                 disabled={this.state.minting}
                 onClick={this.mint}
                 startIcon={<GrassOutlined />}>
-                BUY {this.state.mintAmount} NFT{this.state.mintAmount > 0 ? "s" : ""}{this.state.minting && <CircularProgress size={20} sx={{marginLeft:1}}/>}
+                BUY {this.state.mintAmount} NFT{this.state.mintAmount > 0 ? "s" : ""}{this.state.minting && <CircularProgress size={20} sx={{ marginLeft: 1 }} />}
               </Button>
-              
+
               <div style={{ marginTop: 5 }}>
                 <span style={{ color: (Math.ceil(this.state.balance * 10) / 10) > (this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST) ? 'var(--primary-text)' : 'red' }}>{this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST}</span> / {Math.ceil(this.state.balance * 10) / 10} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}
               </div>
@@ -390,7 +401,7 @@ const highlightTextStyles = {
 }
 
 const codeStyles = {
-  color: "#8A6534",  
+  color: "#8A6534",
 }
 
 const linkStyle = {
