@@ -5,6 +5,7 @@ import { Button, Container, Slider } from "@mui/material";
 // import { Helmet } from "react-helmet"
 import * as Constants from '../constants'
 import { GrassOutlined, AccountBalanceWalletOutlined } from '@mui/icons-material'
+import Snackbar from '@mui/material/Snackbar';
 
 import Web3EthContract from "web3-eth-contract";
 import Web3Utils from 'web3-utils'
@@ -15,22 +16,26 @@ class Index extends React.Component {
     this.state = {
       mintAmount: 1,
       balance: 0,
+      currentAccount: "",
+      contract: null,
+      contractLoaded: false,
+      totalSupply: 0,
+      maxSupply: 0,
       provider: {
         installed: false,
         chainId: 1, // 1:ETH Mainnet,
         connected: false,
       },
-      currentAccount: "",
-      contract: null,
-      contractLoaded: false,
-      totalSupply: 0,
-      maxSupply: 0
+      snackbar: false,
+      snackbarMessage: "",
+      minting: false,
     };
 
     this.handleAccountsChanged = this.handleAccountsChanged.bind(this);
     this.connectToWallet = this.connectToWallet.bind(this);
     this.mint = this.mint.bind(this);
     this.handleMintAmountSliderChange = this.handleMintAmountSliderChange.bind(this);
+    this.handleCloseSnackbar = this.handleCloseSnackbar.bind(this);
   }
 
   async componentDidMount() {
@@ -50,36 +55,32 @@ class Index extends React.Component {
 
 
   async startApp(provider) {
-    console.log("App starting...")
-    const chainId = await provider.request({ method: 'eth_chainId' });
+    console.log("Decentralized app starting...")
+    const chainId = await provider.request({ method: Constants.ETH_METHOD_CHAINID });
     this.setState({ provider: { ...this.state.provider, chainId: chainId } });
     this.currentEthAccount(provider);
   }
 
   currentEthAccount(provider) {
     provider
-      .request({ method: 'eth_accounts' })
+      .request({ method: Constants.ETH_METHOD_ACCOUNTS })
       .then(this.handleAccountsChanged)
       .catch((err) => {
-        // Some unexpected error.
-        // For backwards compatibility reasons, if no accounts are available,
-        // eth_accounts will return an empty array.
         console.error(err);
       });
   }
 
   handleChainChanged(_chainId) {
+    console.log("Chain changed. Reloading window")
     window.location.reload();
   }
 
   async handleAccountsChanged(accounts) {
-    console.log("handleAccountsChanged", accounts);
+    console.log("Account set to", accounts);
     if (accounts.length === 0) {
-      // MetaMask is locked or the user has not connected any accounts
-      console.log('Please connect to MetaMask.');
-    } else if (accounts[0] !== this.state.currentAccount) {
-
-      console.log("Accounts", accounts[0]);
+      // MetaMask is locked or the user has not connected any accounts      
+      this.openSnackbar('Please connect to MetaMask.')
+    } else if (accounts[0] !== this.state.currentAccount) {      
       this.setState({ provider: { ...this.state.provider, connected: true } })
       const account = accounts[0];
       this.state.currentAccount = account;
@@ -108,13 +109,16 @@ class Index extends React.Component {
   }
 
   async loadBalance(provider) {
-    const result = await provider.request({ method: 'eth_getBalance', params: [this.state.currentAccount, 'latest'] });
+    console.log("Loading your balance...")
+    const result = await provider.request({ method: Constants.ETH_METHOD_GET_BALANCE, params: [this.state.currentAccount, 'latest'] });
     this.setState({ balance: Web3Utils.fromWei(result) });
+    console.log("Your balance is ", result)
   }
 
   async loadContract(provider) {
     if (provider) {
-      const abiResponse = await fetch("/config/abi.json", {
+      console.log("Loading the contract...")
+      const abiResponse = await fetch(Constants.ABI_PATH, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -137,6 +141,8 @@ class Index extends React.Component {
 
         this.loadTotalSupply(contract);
         this.loadMaxSupply(contract);
+
+        console.log("The contract loaded successfully.")
       }
     }
   }
@@ -149,7 +155,7 @@ class Index extends React.Component {
       });
 
     this.setState({ totalSupply: totalSupply })
-    console.log("total supply:", totalSupply);
+    console.log("Total supply of this NFT:", totalSupply);
   }
 
   async loadMaxSupply(contract) {
@@ -159,14 +165,15 @@ class Index extends React.Component {
         from: this.state.currentAccount
       });
     this.setState({ maxSupply: maxSupply })
-    console.log("maxSupply:", maxSupply);
+    console.log("Max Supply of this NFT:", maxSupply);
   }
 
   async connectToWallet() {
     const ethereum = await this.ethereumProvider();
     if (ethereum) {
+      this.openSnackbar("Connecting to your wallet...");
       ethereum
-        .request({ method: 'eth_requestAccounts' })
+        .request({ method: Constants.ETH_METHOD_REQUEST_ACCOUNTS })
         .then(this.handleAccountsChanged)
         .catch((err) => {
           if (err.code === 4001) {
@@ -181,38 +188,79 @@ class Index extends React.Component {
   }
 
   async mint() {
-    console.log("Contract", this.state.contract);
-    if (this.state.contract) {
+    const contract = this.state.contract;
+    const account = this.state.currentAccount;
+    const mintAmount = this.state.mintAmount;
+    const cost = Constants.CONTRACT_WEI_COST;
+    const gasLimit = Constants.CONTRACT_GAS_LIMIT;
+    const totalCostWei = String(cost * mintAmount);
+    const totalGasLimit = String(gasLimit * mintAmount);
 
+    console.log("Mint Amount:", mintAmount);
+    console.log("Cost:", cost);
+    console.log("Total Cost Wei:", totalCostWei);
+    console.log("Total Gas Limit:", totalGasLimit);
+
+    this.openSnackbar("Start Minting...");
+    this.setState({minting: true})
+    
+    try {
+    const receipt = await contract.methods
+      .mint(mintAmount)
+      .send({
+        gasLimit: String(totalGasLimit),
+        to: Constants.CONTRACT_ADDRESS,
+        from: account,
+        value: totalCostWei,
+      });
+      console.log(receipt);
+      this.openSnackbar(`${Constants.NFT_NAME} is yours! go visit Opensea.io to view it.`)
+    } catch(err) {
+      this.openSnackbar(err.message)
+      console.log(err)
+    } finally {
+      this.setState({minting: false})      
     }
-
   }
 
   handleMintAmountSliderChange(event, newValue) {
-    this.setState({mintAmount:newValue})
+    this.setState({ mintAmount: newValue })
+  }
+
+  openSnackbar(msg) {
+    console.log('Snackbar:', msg);
+    this.setState({ snackbarMessage: msg })
+    this.setState({ snackbar: true })
+  }
+
+  handleCloseSnackbar(event, reason) {
+    if (reason === 'clickaway') {
+      return;
+    }
+    this.setState({ snackbar: false })
+    this.setState({ snackbarMessage: "" })
+  }
+
+  truncate(input, len){
+    return input.length > len ? `${input.substring(0, len)}...` : input;
   }
 
   render() {
     return (
       <main style={pageStyles}>
-        <title>Super Urban Cat Minting dAPP</title>
-        <h1 style={headingStyles}>Super Urban Cat</h1>
-        <h2>Minting Dapp</h2>
-
-        <h2></h2>
-
-        <Container maxWidth="sm" sx={{ p: 2, border: '1px dashed grey' }}>
-          {this.state.contract && <p style={supplyTextStyles}>{this.state.totalSupply}/{this.state.maxSupply}</p>}
+        <title>Super Urban Cat Minting dApp</title>
+        <h1 style={headingStyles}>Super Urban Cat Minting dApp</h1>              
+        <Container maxWidth="sm" sx={mintContainer}>
+          
+          {this.state.contract && <p style={highlightTextStyles}>{this.state.totalSupply} / {this.state.maxSupply}</p>}
+          <img src="/images/sucrolling.gif" alt="Super Urban Cat Rolling Images"/>
           <p style={highlightTextStyles}>1 {Constants.CONTRACT_SYMBOL} costs 0.5 {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}.<br /></p>
-          <div style={{ marginBottom: 10 }}>Excluding gas fees.</div>
-          <div style={codeStyles}>Wallet Address: <span>{this.state.provider.connected ? <a style={linkStyle} href={"https://polygonscan.com/address/" + this.state.currentAccount} target="_blank" rel="noreferrer">{this.state.currentAccount}</a> : "Not connected"}</span></div>
-          <div style={codeStyles}>Contract Address: <a style={linkStyle} href={"https://polygonscan.com/token/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{Constants.CONTRACT_ADDRESS}</a></div>
-
-          {this.state.balance > 0 && <p>You have <strong>{this.state.balance} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}</strong></p>}
+          <div style={noteStyles}>Excluding gas fees.</div>
+         
           <p>{this.state.contractLoaded}</p>
           { // Before metamask installed
             !this.state.provider.installed &&
-            <p>Please Install MetaMask. <a href="https://metamask.io/download" target="_blank" rel="noreferrer">https://metamask.io/download</a></p>
+            <p>Please Install MetaMask. <a href={Constants.METAMASK_DOWNLOAD} target="_blank" rel="noreferrer">{Constants.METAMASK_DOWNLOAD}</a></p>
           }
 
           { // Need add or switch network to polygon mainnet
@@ -253,30 +301,40 @@ class Index extends React.Component {
                 variant="contained"
                 color="secondary"
                 size="large"
+                disabled={this.state.minting}
                 onClick={this.mint}
                 startIcon={<GrassOutlined />}>
                 Buy {this.state.mintAmount} NFT{this.state.mintAmount > 0 ? "s" : ""}
               </Button>
-              <div style={{marginTop:5}}>
-                Costs {this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol} excluding gas fees.
+              <div style={{ marginTop: 5 }}>
+                <span style={{color: (Math.ceil(this.state.balance * 10) / 10) > (this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST) ? 'var(--primary-text)': 'red'}}>{this.state.mintAmount * Constants.CONTRACT_DISPLAY_COST}</span> / {Math.ceil(this.state.balance * 10) / 10} {Constants.POLYGON_CHAIN_PARAM[0].nativeCurrency.symbol}
               </div>
             </div>
           }
-          <p>Beware of fake sites. Please make sure that the website address is "superurbancat.com", and then connect your wallet.</p>
+          <div style={codeStyles}>Opensea: <a href={Constants.MARKETPLACE_LINK} target="_blank" rel="noreferrer">{Constants.MARKETPLACE_LINK}</a></div>        
+          <div style={codeStyles}>Contract: <a style={linkStyle} href={Constants.POLYGON_SCAN + "/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{this.truncate(Constants.CONTRACT_ADDRESS,15)}</a></div>          
+
+          <p style={{...noteStyles, textAlign:'left'}}>Please make sure that the website address is "superurbancat.com", and then connect your wallet.</p>
         </Container>
 
-        <p style={paragraphStyles}>
+        <p style={noteStyles}>
           Please make sure you are connected to Polygon Mainnet and the correct address.
         </p>
-        <p style={paragraphStyles}>
+        <p style={noteStyles}>
           Please note: Once you make the purchase, you cannot undo this action.
         </p>
-        <p style={paragraphStyles}>
+        <p style={noteStyles}>
           We have set the gas limit to {Constants.CONTRACT_GAS_LIMIT} for the contract to
           successfully mint your NFT. We recommend that you don't lower the
           gas limit.
         </p>
-        <p><a style={linkStyle} href="https://discord.gg/R6PQUUjXHC" target="_blank" rel="noreferrer">Official Discord</a></p>
+        <p><a style={linkStyle} href={Constants.DISCORD_LINK} target="_blank" rel="noreferrer">Official Discord</a></p>
+        <div><Snackbar
+          open={this.state.snackbar}
+          autoHideDuration={6000}
+          onClose={this.handleCloseSnackbar}
+          message={this.state.snackbarMessage}
+        /></div>
       </main>
     )
   }
@@ -286,30 +344,26 @@ export default Index
 
 // styles
 const pageStyles = {
-  color: "#232129",
-  padding: 96,
-  // fontFamily: "-apple-system, Press Start 2P, sans-serif, serif",
-  // fontFamily: "'Press Start 2P', cursive",
-  // fontFamily: "-apple-system, Acme, sans-serif",
-  // fontFamily: "-apple-system, Concert One, cursive",
-  textAlign: 'center'
+  textAlign: 'center',  
+}
+
+const mintContainer = {
+  backgroundColor: '#10121F',
+  color: '#eeeeee',
+  border: '2px dashed grey',
+  borderRadius: 10,
 }
 const headingStyles = {
-  marginTop: 0,
-  // maxWidth: 320,
 }
 
 const buttonStyles = {
-  fontFamily: "-apple-system, Acme, sans-serif",
+  fontFamily: "Mukta"
 }
-const paragraphStyles = {
+const noteStyles = {
   marginBottom: 10,
-}
-
-const supplyTextStyles = {
-  fontSize: 50,
-  textAlign: 'center',
-  fontWeight: 'bold'
+  color:'grey',
+  fontSize:'0.8em',
+  // textAlign:'left'
 }
 
 const highlightTextStyles = {
