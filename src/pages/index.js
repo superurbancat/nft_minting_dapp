@@ -259,14 +259,10 @@ class Index extends React.Component {
             {`
               {
                 "@context": "https://schema.org",
-                "@type": "Organization",
-                "url": "https://www.spookytech.com",
-                "name": "Spooky technologies",
-                "contactPoint": {
-                  "@type": "ContactPoint",
-                  "telephone": "+5-601-785-8543",
-                  "contactType": "Customer Support"
-                }
+                "@type": "CreativeWork",
+                "url": "https://www.superurbancat.com",
+                "name": "Super Urban Cat NFT Minting dApp",
+                "abstract": "Decentralized web application for minting NFT, Super Urban Cat(SUC). Super Urban Cats are adorable creatures of 10,000 randomly generated. The cats are living in Super Urban City. The people in the city so called Super Urban People used to be a good friend of the cats. But after they realized the taste of coffee, they stopped being frineds of the cats. Now Super Urban Cats are lonely. Would you adopt one and take good care of it?"
               }
             `}
           </script>
@@ -285,21 +281,6 @@ class Index extends React.Component {
             <p>Please Install MetaMask. <a href={Constants.METAMASK_DOWNLOAD} target="_blank" rel="noreferrer">{Constants.METAMASK_DOWNLOAD}</a></p>
           }
 
-          { // Need add or switch network to polygon mainnet
-            (this.state.provider.installed && this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) &&
-            <p>
-              <Button
-                size="large"
-                variant="contained"
-                color="secondary"
-                onClick={this.switchNetwork}
-                startIcon={<CompareArrowsOutlined />}
-              >
-                Switch Network TO POLYGON MAINNET
-              </Button>
-            </p>
-          }
-
           { // Connect to wallet
             this.state.provider.installed && !this.state.provider.connected &&
             <Button
@@ -313,6 +294,21 @@ class Index extends React.Component {
             </Button>
           }
 
+          { // Need add or switch network to polygon mainnet
+            (this.state.provider.installed && this.state.provider.connected && this.state.provider.chainId !== Constants.POLYGON_CHAIN_ID) &&
+            <p>
+              <Button
+                size="large"
+                variant="contained"
+                color="secondary"
+                onClick={this.switchNetwork}
+                startIcon={<CompareArrowsOutlined />}
+              >
+                Switch Network TO POLYGON MAINNET
+              </Button>
+            </p>
+          }
+          
           { // Time to mint
             this.state.provider.installed && this.state.provider.connected && this.state.provider.chainId === Constants.POLYGON_CHAIN_ID &&
             <div>

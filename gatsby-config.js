@@ -12,5 +12,12 @@ module.exports = {
         icon: "src/images/icon.png",
       },
     },
+    {
+      resolve: "gatsby-plugin-google-analytics",
+      options: {        
+        trackingId: "G-0B38DFTJS0",
+        head: true
+      }
+    }
   ],
 };
