@@ -341,7 +341,7 @@ class Index extends React.Component {
             </div>
           }
           <div style={codeStyles}>Opensea: <OutboundLink href={Constants.MARKETPLACE_LINK} target="_blank" rel="noreferrer">{Constants.MARKETPLACE_LINK}</OutboundLink></div>
-          <div style={codeStyles}>Contract: <OutboundLink style={linkStyle} href={Constants.POLYGON_SCAN + "/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{this.truncate(Constants.CONTRACT_ADDRESS, 15)}</OutboundLink></div>
+          <div style={codeStyles}>Contract: <OutboundLink style={linkStyle} href={Constants.POLYGON_SCAN + "/" + Constants.CONTRACT_ADDRESS} target="_blank" rel="noreferrer">{this.truncate(Constants.CONTRACT_ADDRESS, 15)}</OutboundLink></div>          
 
           <p style={{ ...noteStyles, textAlign: 'left' }}>Please make sure that the website address is "superurbancat.com", and then connect your wallet.</p>
         </Container>
@@ -357,7 +357,8 @@ class Index extends React.Component {
           successfully mint your NFT. We recommend that you don't lower the
           gas limit.
         </p>
-        <p><OutboundLink style={linkStyle} href={Constants.DISCORD_LINK} target="_blank" rel="noreferrer">Official Discord</OutboundLink></p>
+        <div style={codeStyles}>Official Email: <OutboundLink style={linkStyle} href="mailto:superurbancat@gmail.com" target="_blank" rel="noreferrer">{Constants.EMAIL_ADDR}</OutboundLink></div>
+        <div style={codeStyles}>Official Discord: <OutboundLink style={linkStyle} href={Constants.DISCORD_LINK} target="_blank" rel="noreferrer">{Constants.DISCORD_LINK}</OutboundLink></div>
         <div><Snackbar
           open={this.state.snackbar}
           autoHideDuration={6000}
