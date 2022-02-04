@@ -33,4 +33,5 @@ export const MARKETPLACE = "Opensea";
 export const MARKETPLACE_LINK = "https://opensea.io/collection/superurbancat";
 export const POLYGON_SCAN = "https://polygonscan.com/token";
 export const METAMASK_DOWNLOAD = "https://metamask.io/download";
-export const DISCORD_LINK = "https://discord.gg/R6PQUUjXHC";
+export const DISCORD_LINK = "https://discord.gg/CFnNMZ7aEb";
+export const EMAIL_ADDR = "superurbancat@gmail.com";
