@@ -261,10 +261,10 @@ class Index extends React.Component {
             {`
               {
                 "@context": "https://schema.org",
-                "@type": "CreativeWork",
+                "@type": "WebSite",
                 "url": "https://www.superurbancat.com",
-                "name": "Super Urban Cat NFT Minting dApp",
-                "abstract": "Decentralized web application for minting NFT, Super Urban Cat(SUC). Super Urban Cats are adorable creatures of 10,000 randomly generated. The cats are living in Super Urban City. The people in the city so called Super Urban People used to be a good friend of the cats. But after they realized the taste of coffee, they stopped being frineds of the cats. Now Super Urban Cats are lonely. Would you adopt one and take good care of it?"
+                "name": "Super Urban Cat NFT Minting Web3 dApp",
+                "description": "Decentralized web application for minting NFT, Super Urban Cat(SUC). Super Urban Cats are adorable creatures of 10,000 randomly generated. The cats are living in Super Urban City. The people in the city so called Super Urban People used to be a good friend of the cats. But after they realized the taste of coffee, they stopped being frineds of the cats. Now Super Urban Cats are lonely. Would you adopt one and take good care of it?"
               }
             `}
           </script>
